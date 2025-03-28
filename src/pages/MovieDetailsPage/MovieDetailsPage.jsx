@@ -4,8 +4,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import MovieCast from '../../components/MovieCast/MovieCast';
 import MovieReviews from '../../components/MovieReviews/MovieReviews';
 
-const API_KEY = 'your_tmdb_api_key';
+const API_KEY = '593d8d9ef2513a90c5efee2cced8432f';
 const BASE_URL = 'https://api.themoviedb.org/3';
+const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1OTNkOGQ5ZWYyNTEzYTkwYzVlZmVlMmNjZWQ4NDMyZiIsIm5iZiI6MTc0MjYyODkyOC4yMTIsInN1YiI6IjY3ZGU2ODQwMWZlZTg3YzFiYzdhOTljMiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.FnCPxUqbB7pBnClFVmJi_93FqFzxwfHBTgWZL_NCvrU';
 
 function MovieDetailsPage() {
   const { movieId } = useParams();
@@ -17,7 +18,7 @@ function MovieDetailsPage() {
     axios
       .get(`${BASE_URL}/movie/${movieId}`, {
         headers: {
-          Authorization: `Bearer ${API_KEY}`,
+          Authorization: `Bearer ${API_TOKEN}`,
         },
       })
       .then(response => {
@@ -26,7 +27,7 @@ function MovieDetailsPage() {
       })
       .catch(error => {
         console.error('Error fetching movie details:', error);
-        setError('Failed to load movie details. Please try again later.'); 
+        setError('Failed to load movie details. Please try again later.');
       });
   }, [movieId]);
 
