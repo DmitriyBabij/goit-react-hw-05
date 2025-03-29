@@ -1,44 +1,57 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import MovieList from '../../components/MovieList/MovieList';
 
 const API_KEY = '593d8d9ef2513a90c5efee2cced8432f';
-const BASE_URL = 'https://api.themoviedb.org/3';
-const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1OTNkOGQ5ZWYyNTEzYTkwYzVlZmVlMmNjZWQ4NDMyZiIsIm5iZiI6MTc0MjYyODkyOC4yMTIsInN1YiI6IjY3ZGU2ODQwMWZlZTg3YzFiYzdhOTljMiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.FnCPxUqbB7pBnClFVmJi_93FqFzxwfHBTgWZL_NCvrU';
+const BASE_URL = 'https://api.themoviedb.org/3/search/movie';
 
-function MoviesPage() {
-  const [query, setQuery] = useState('');
+const MoviesPage = () => {
   const [movies, setMovies] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('query') || '';
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!query) return;
 
-    if (query.trim()) {
-      axios
-        .get(`${BASE_URL}/search/movie?query=${query}`, {
-          headers: {
-            Authorization: `Bearer ${API_TOKEN}`,
+    const fetchMovies = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}`, {
+          params: {
+            api_key: API_KEY,
+            query: query,
           },
-        })
-        .then(response => setMovies(response.data.results))
-        .catch(error => console.error(error));
-    }
+        });
+        setMovies(response.data.results);
+      } catch (error) {
+        console.error('Error fetching movies:', error);
+      }
+    };
+
+    fetchMovies();
+  }, [query]);
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const searchQuery = form.elements.search.value.trim();
+
+    if (!searchQuery) return;
+    setSearchParams({ query: searchQuery });
   };
 
   return (
     <div>
+      <h1>Search Movies</h1>
       <form onSubmit={handleSearch}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search movies"
-        />
+        <input type="text" name="search" defaultValue={query} placeholder="Enter movie name" />
         <button type="submit">Search</button>
       </form>
+
       <MovieList movies={movies} />
     </div>
   );
-}
+};
 
 export default MoviesPage;
+

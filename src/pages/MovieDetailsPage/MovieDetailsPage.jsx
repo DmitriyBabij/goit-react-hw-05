@@ -1,59 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, Link, useLocation, Outlet } from 'react-router-dom';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
-import MovieCast from '../../components/MovieCast/MovieCast';
-import MovieReviews from '../../components/MovieReviews/MovieReviews';
 
 const API_KEY = '593d8d9ef2513a90c5efee2cced8432f';
-const BASE_URL = 'https://api.themoviedb.org/3';
-const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1OTNkOGQ5ZWYyNTEzYTkwYzVlZmVlMmNjZWQ4NDMyZiIsIm5iZiI6MTc0MjYyODkyOC4yMTIsInN1YiI6IjY3ZGU2ODQwMWZlZTg3YzFiYzdhOTljMiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.FnCPxUqbB7pBnClFVmJi_93FqFzxwfHBTgWZL_NCvrU';
+const BASE_URL = 'https://api.themoviedb.org/3/movie';
 
-function MovieDetailsPage() {
+const MovieDetailsPage = () => {
   const { movieId } = useParams();
-  const navigate = useNavigate(); 
   const [movie, setMovie] = useState(null);
-  const [error, setError] = useState(null); 
+  const location = useLocation();
+  const backLinkRef = useRef(location.state?.from ?? '/movies');
 
   useEffect(() => {
-    axios
-      .get(`${BASE_URL}/movie/${movieId}`, {
-        headers: {
-          Authorization: `Bearer ${API_TOKEN}`,
-        },
-      })
-      .then(response => {
+    const fetchMovieDetails = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/${movieId}`, {
+          params: { api_key: API_KEY },
+        });
         setMovie(response.data);
-        setError(null);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error fetching movie details:', error);
-        setError('Failed to load movie details. Please try again later.');
-      });
+      }
+    };
+
+    fetchMovieDetails();
   }, [movieId]);
 
-  if (error) {
-    return <div>{error}</div>; 
+  if (!movie) {
+    return <p>Loading...</p>;
   }
-
-  if (!movie) return <div>Loading...</div>; 
 
   return (
     <div>
-    
-      <button onClick={() => navigate(-1)} style={{ marginBottom: '20px' }}>Go back</button>
-
+      <Link to={backLinkRef.current}>Go Back</Link>
       <h1>{movie.title}</h1>
-      <img
-        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-        alt={movie.title}
-      />
+      <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} />
       <p>{movie.overview}</p>
 
-      <MovieCast movieId={movieId} />
-      <MovieReviews movieId={movieId} />
+      <h3>Additional Information</h3>
+      <ul>
+        <li>
+          <Link to="cast">Cast</Link>
+        </li>
+        <li>
+          <Link to="reviews">Reviews</Link>
+        </li>
+      </ul>
+
+      <Outlet />
     </div>
   );
-}
+};
 
 export default MovieDetailsPage;
+
+
 

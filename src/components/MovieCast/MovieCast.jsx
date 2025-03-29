@@ -1,55 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import styles from './MovieCast.module.css';
 
-const API_KEY = '593d8d9ef2513a90c5efee2cced8432f';
-const BASE_URL = 'https://api.themoviedb.org/3';
-const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1OTNkOGQ5ZWYyNTEzYTkwYzVlZmVlMmNjZWQ4NDMyZiIsIm5iZiI6MTc0MjYyODkyOC4yMTIsInN1YiI6IjY3ZGU2ODQwMWZlZTg3YzFiYzdhOTljMiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.FnCPxUqbB7pBnClFVmJi_93FqFzxwfHBTgWZL_NCvrU';
-
-function MovieCast({ movieId }) {
+const MovieCast = () => {
+  const { movieId } = useParams();
   const [cast, setCast] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    axios
-      .get(`${BASE_URL}/movie/${movieId}/credits`, {
-        headers: {
-          Authorization: `Bearer ${API_TOKEN}`,
-        },
-      })
-      .then(response => setCast(response.data.cast))
-      .catch(error => {
-        console.error('Error fetching movie cast:', error);
-        setError('Failed to load cast information. Please try again later.');
-      });
+    const fetchCast = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await axios.get(
+          `https://api.themoviedb.org/3/movie/${movieId}/credits`,
+          {
+            params: { api_key: '593d8d9ef2513a90c5efee2cced8432f' },
+          }
+        );
+
+        if (response.data.cast.length === 0) {
+          setError('Немає інформації про акторський склад.');
+        } else {
+          setCast(response.data.cast);
+        }
+      } catch (err) {
+        console.error('Помилка при завантаженні акторського складу:', err);
+        setError('Не вдалося завантажити акторський склад.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCast();
   }, [movieId]);
 
-  if (error) {
-    return <div>{error}</div>;
-  }
-
   return (
-    <div className={styles.cast}>
-      <h2>Cast</h2>
+    <div>
+      <h2>Акторський склад</h2>
+      {loading && <p>Завантаження...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <ul>
-        {cast.map(actor => (
-          <li key={actor.id}>
-            {actor.profile_path ? (
-              <img
-                src={`https://image.tmdb.org/t/p/w500${actor.profile_path}`}
-                alt={actor.name}
-                className={styles.actorImage}
-              />
-            ) : (
-              <span>No image available</span>
-            )}
-            <p>{actor.name}</p>
+        {cast.map(({ id, profile_path, name, character }) => (
+          <li key={id}>
+            <img
+              src={profile_path ? `https://image.tmdb.org/t/p/w200${profile_path}` : 'https://via.placeholder.com/100'}
+              alt={name}
+              width="100"
+            />
+            <p>{name} - {character}</p>
           </li>
         ))}
       </ul>
     </div>
   );
-}
+};
 
 export default MovieCast;
 
